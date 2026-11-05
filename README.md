@@ -136,6 +136,8 @@ Each push to `main` runs the [Build Android APK](https://github.com/JaiGod/harve
 
 **Testing.** Automated with Playwright: plant → sleep → water → harvest → ship → get paid; save → reload → continue; shop, forge, animals, machines, fishing (catching a Bluegill), festival and night rendering; and a 390×844 touch viewport. No console errors.
 
+**Beta tested on the live site ✅ (Nov 5, 2026).** On https://jaigod.github.io/harvest-hollow/ I started a new farm, walked around, tilled, planted and watered, let about a game-hour pass, opened the pause menu, talked to Nell, caught a fish, and checked night, the festival, winter and a 390 px phone view. No console errors, no horizontal scroll, and the canvas drew the world every time. The screenshots above were captured from that live session.
+
 ## 🔗 Links
 
 - ▶️ **Play:** https://jaigod.github.io/harvest-hollow/
