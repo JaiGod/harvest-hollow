@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>Harvest Hollow · Cozy Farm Life</title>
+<meta name="description" content="Harvest Hollow: an original cozy pixel-art farming life sim. Grow 12 crops over 4 seasons, raise animals, fish, and befriend the village. Play free in your browser.">
+<meta name="theme-color" content="#2b1d12">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' fill='%236cb83c'/%3E%3Crect x='3' y='9' width='10' height='6' fill='%238f6038'/%3E%3Crect x='7' y='3' width='2' height='7' fill='%233f9a3a'/%3E%3Crect x='4' y='4' width='3' height='2' fill='%235cb84a'/%3E%3Crect x='9' y='3' width='3' height='2' fill='%235cb84a'/%3E%3C/svg%3E">
+<style>
+:root{--wood:#7a4a24;--wood2:#a8743a;--pap:#fbefd0;--pap2:#f1dfb4;--ink:#3a2614;--grn:#5aa032;--gold:#f2b134;--red:#d0453a}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;overflow:hidden;background:#2b1d12;color:var(--ink);font-family:ui-rounded,"Trebuchet MS","Segoe UI",system-ui,sans-serif;touch-action:none;user-select:none;-webkit-user-select:none}
+canvas{position:fixed;left:0;top:0;display:block}#cv{image-rendering:pixelated;image-rendering:crisp-edges}#ui{z-index:1}
+.hide{display:none!important}
+button{font:inherit;color:inherit;cursor:pointer}
+#hud{position:fixed;left:8px;top:8px;z-index:3;display:flex;flex-direction:column;gap:4px;pointer-events:none;max-width:calc(100vw - 190px)}
+#clock{background:var(--pap);border:3px solid var(--wood);border-radius:10px;padding:4px 9px;box-shadow:0 3px 0 #0006;display:flex;gap:8px;align-items:center;font-size:14px;white-space:nowrap}
+#clock b{font-size:14px}#hTime{font-variant-numeric:tabular-nums;color:#6a4a2a}
+#gold{align-self:flex-start;background:#3a2614;color:#ffd96a;border:3px solid var(--gold);border-radius:10px;padding:2px 10px;font-weight:800;font-size:15px;box-shadow:0 3px 0 #0006}
+#gold:before{content:"● ";color:var(--gold)}
+#ebar{width:130px;height:14px;background:#3a2614;border:3px solid #3a2614;border-radius:8px;overflow:hidden;position:relative;box-shadow:0 2px 0 #0006,0 0 0 2px #fbefd0}#ebar:after{content:"⚡";position:absolute;left:3px;top:-3px;font-size:11px}
+#efill{display:block;height:100%;width:100%;background:#6ac04a;transition:width .3s;border-radius:4px;box-shadow:inset 0 3px 0 #fff5}
+#tbtns{position:fixed;right:8px;top:8px;z-index:3;display:flex;gap:6px}
+#tbtns button,.rbtn{width:42px;height:42px;border-radius:12px;background:var(--pap);border:3px solid var(--wood);box-shadow:0 3px 0 #0006;font-size:19px;padding:0}
+#tbtns button:active{transform:translateY(2px);box-shadow:0 1px 0 #0006}
+#hbwrap{position:fixed;left:50%;bottom:max(8px,env(safe-area-inset-bottom));transform:translateX(-50%);z-index:3;display:flex;flex-direction:column;align-items:center;gap:4px;max-width:100vw}
+#selName{font-size:12px;font-weight:700;color:#fff;text-shadow:0 1px 2px #000,0 0 4px #000;min-height:15px}
+#hotbar{display:flex;gap:3px;background:#3a2614cc;padding:4px;border-radius:12px;border:3px solid var(--wood)}
+.slot{position:relative;width:40px;height:40px;border-radius:8px;background:var(--pap2);border:2px solid #c8a06a;padding:0;display:flex;align-items:center;justify-content:center}
+.slot img{width:32px;height:32px;image-rendering:pixelated;pointer-events:none}.slot b{position:absolute;right:2px;bottom:0;font-size:11px;color:#fff;text-shadow:0 0 2px #000,0 0 2px #000}
+.slot i{position:absolute;left:3px;top:0;font-size:9px;font-style:normal;color:#8a6a4a}.slot.on{border-color:#fff;background:#fff6dc;box-shadow:0 0 0 2px var(--gold)}
+#prompt{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(86px + env(safe-area-inset-bottom));z-index:3;background:#000a;color:#fff;padding:4px 12px;border-radius:20px;font-size:13px;font-weight:700;pointer-events:none;transition:opacity .15s;white-space:nowrap;max-width:94vw;overflow:hidden;text-overflow:ellipsis}
+#toasts{position:fixed;top:64px;left:50%;transform:translateX(-50%);z-index:6;display:flex;flex-direction:column;align-items:center;gap:6px;pointer-events:none;width:min(92vw,420px)}
+.toast{background:var(--pap);border:3px solid var(--wood);border-radius:10px;padding:6px 12px;font-size:14px;font-weight:700;box-shadow:0 3px 0 #0006;animation:tin .3s ease-out,tout .4s 2.8s ease-in forwards;text-align:center}
+.toast.ach{background:#fff3c4;border-color:var(--gold)}.toast.gold{background:#e8ffd8;border-color:var(--grn)}
+@keyframes tin{from{transform:translateY(-14px) scale(.9);opacity:0}}@keyframes tout{to{transform:translateY(-10px);opacity:0}}
+#touch{display:none}body.touch #touch{display:block}
+#joy{position:fixed;left:18px;bottom:calc(100px + env(safe-area-inset-bottom));width:112px;height:112px;border-radius:50%;background:#0003;border:3px solid #fff5;z-index:3;touch-action:none}
+#knob{position:absolute;left:31px;top:31px;width:44px;height:44px;border-radius:50%;background:#fbefd0dd;border:3px solid var(--wood)}
+#bAct{position:fixed;right:22px;bottom:calc(112px + env(safe-area-inset-bottom));width:78px;height:78px;border-radius:50%;background:#ffd96a;border:4px solid var(--wood);box-shadow:0 4px 0 #0007;font-size:32px;z-index:3;padding:0;touch-action:none}
+#bAct:active{transform:translateY(3px);box-shadow:0 1px 0 #0007}
+body.touch #prompt{bottom:calc(76px + env(safe-area-inset-bottom))}
+#panel{position:fixed;inset:0;z-index:8;background:#1a0f0899;display:flex;align-items:center;justify-content:center;padding:12px}
+.box{width:min(540px,100%);max-height:88vh;display:flex;flex-direction:column;background:var(--pap);border:4px solid var(--wood);border-radius:16px;box-shadow:0 6px 0 #0008,inset 0 0 0 3px var(--pap2);animation:pop .22s cubic-bezier(.3,1.6,.6,1)}
+@keyframes pop{from{transform:scale(.85);opacity:0}}
+.ph{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:var(--wood2);border-radius:10px 10px 0 0;color:#fff;text-shadow:0 2px 0 #0005}
+.ph h2{margin:0;font-size:18px}#pX{background:#0003;border:0;border-radius:8px;width:34px;height:34px;color:#fff;font-size:18px}
+#pBody{padding:10px 12px 14px;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;touch-action:pan-y}
+#pBody h3{margin:12px 0 6px;font-size:14px;color:var(--wood);border-bottom:2px dashed #d8b884;padding-bottom:3px}
+.row{display:flex;align-items:center;gap:8px;padding:6px;border-radius:10px;background:#fff8e4;margin:5px 0;border:2px solid #ecd6a8}
+.row.tot{justify-content:space-between;background:#e8ffd8;border-color:#a8d888}
+.ic{width:32px;height:32px;image-rendering:pixelated;flex:none}.ic.big{font-size:26px;text-align:center;line-height:32px}.ic.por,.por{image-rendering:pixelated;background:#f6d8a8;border-radius:8px}
+.rt{flex:1;min-width:0;display:flex;flex-direction:column}.rt small{color:#7a5a3a;font-size:12px}
+.btn{background:var(--grn);color:#fff;border:0;border-bottom:4px solid #3a7a1a;border-radius:10px;padding:7px 11px;font-weight:800;font-size:13px;white-space:nowrap}
+.btn:active{transform:translateY(2px);border-bottom-width:2px}.btn:disabled{background:#b8a890;border-bottom-color:#8a7a62;cursor:default}
+.btn.go{background:#e8902a;border-bottom-color:#a85a10;font-size:15px;padding:10px 18px}
+.bb{display:flex;gap:4px}.bar{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}.col{display:flex;flex-direction:column;gap:8px}.col .btn{padding:11px;font-size:15px}
+.note{font-size:14px;line-height:1.45;margin:6px 0}.gold{color:#a86a00}
+.grid{display:grid;grid-template-columns:repeat(6,1fr);gap:5px}.grid .slot{width:auto;aspect-ratio:1;height:auto}.grid .slot img{width:70%;height:70%}
+.tabs{display:flex;gap:4px;margin-bottom:6px;flex-wrap:wrap}.tabs .btn{background:#c8a06a;border-bottom-color:#8a6a3a;flex:1}.tabs .btn.on{background:var(--grn);border-bottom-color:#3a7a1a}
+.card{background:#fff8e4;border:2px solid #ecd6a8;border-radius:12px;padding:9px;margin:8px 0;display:flex;flex-direction:column;gap:3px}.card small{color:#8a6a4a;font-size:12px}.card p{margin:2px 0;font-size:14px}
+.card.req{border-color:#e0b060;background:#fff3d4}
+.prog{height:10px;background:#e8d4a8;border-radius:6px;overflow:hidden}.prog i{display:block;height:100%;background:var(--grn)}
+.hearts{color:#e8445a;font-size:13px;letter-spacing:-1px}.hearts s{color:#d8c4a0;text-decoration:none}
+.achs{display:grid;grid-template-columns:1fr 1fr;gap:5px}.ach{background:#eee2c8;border-radius:10px;padding:6px;display:flex;flex-direction:column;opacity:.65}.ach.got{background:#fff3c4;opacity:1;border:2px solid var(--gold)}.ach small{font-size:11px;color:#7a5a3a}.ach b{font-size:13px}
+.coll{display:flex;flex-wrap:wrap;gap:4px}.coll span{background:#fff8e4;border-radius:8px;padding:3px;border:2px solid #ecd6a8}.coll .dim img{filter:brightness(0) opacity(.25)}
+.talk{display:flex;gap:10px;align-items:flex-start}.por.big{width:72px;height:72px;flex:none}.talk small{display:block;color:#7a5a3a;font-size:12px}.say{background:#fff;border-radius:10px;padding:8px;margin:6px 0 0;font-size:14px;border:2px solid #ecd6a8}
+.gifts{display:flex;flex-wrap:wrap;gap:4px}.help p{font-size:14px;line-height:1.45;margin:7px 0}
+#title{position:fixed;inset:0;z-index:7;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:16px;background:radial-gradient(ellipse at center,#0000 30%,#1a0f0888 100%)}
+#title h1{margin:0;font-size:clamp(40px,11vw,84px);line-height:.95;color:#ffe9a8;text-align:center;letter-spacing:1px;text-shadow:0 4px 0 #a85a10,0 8px 0 #5a2e0a,0 12px 18px #0008;transform:rotate(-2deg)}
+#title h1 span{color:#9ae86a;text-shadow:0 4px 0 #3a7a1a,0 8px 0 #1e4a0c,0 12px 18px #0008}
+.tag{color:#fff;font-weight:700;text-shadow:0 2px 3px #000;text-align:center;margin:4px 0 8px;font-size:15px}
+.tmenu{display:flex;flex-direction:column;gap:8px;width:min(300px,90vw);background:#fbefd0ee;border:4px solid var(--wood);border-radius:16px;padding:14px;box-shadow:0 6px 0 #0008}
+.tmenu input{font:inherit;font-size:15px;padding:9px;border-radius:10px;border:2px solid #c8a06a;background:#fff;text-align:center;user-select:text}
+.tmenu .btn{font-size:17px;padding:11px}.tmenu small{display:block;font-weight:600;font-size:11px;opacity:.9}
+.credit{color:#fff;font-size:12px;text-shadow:0 1px 2px #000;opacity:.9;text-align:center}
+#fade{position:fixed;inset:0;background:#0b0820;z-index:9;opacity:0;pointer-events:none;transition:opacity .8s}#fade.on{opacity:1}
+@media (max-width:440px){.slot{width:33px;height:33px}.slot img{width:26px;height:26px}#hotbar{gap:2px;padding:3px}#clock{font-size:12px;gap:6px;padding:3px 7px}#clock b{font-size:12px}#tbtns button{width:36px;height:36px;font-size:16px}#hud{max-width:calc(100vw - 170px)}#ebar{width:100px}}
+</style></head><body>
+<canvas id="cv"></canvas><canvas id="ui"></canvas>
+<div id="hud" class="hide"><div id="clock"><b id="hDate"></b><span id="hTime"></span><span id="hWx"></span></div><div id="gold"></div><div id="ebar"><i id="efill"></i></div></div>
+<div id="tbtns" class="hide"><button id="bBag" title="Backpack (E)" aria-label="Backpack">🎒</button><button id="bJour" title="Journal (Q)" aria-label="Journal">📜</button><button id="bSnd" title="Sound (M)" aria-label="Sound">🔊</button><button id="bPause" title="Pause (Esc)" aria-label="Pause">⏸</button></div>
+<div id="prompt"></div>
+<div id="hbwrap" class="hide"><div id="selName"></div><div id="hotbar" class="hide"></div></div>
+<div id="toasts"></div>
+<div id="touch"><div id="joy"><i id="knob"></i></div><button id="bAct" aria-label="Action">✋</button></div>
+<div id="panel" class="hide"><div class="box"><div class="ph"><h2 id="pTitle"></h2><button id="pX" aria-label="Close">✕</button></div><div id="pBody"></div></div></div>
+<div id="title"><h1>Harvest<br><span>Hollow</span></h1><div class="tag">🌱 A cozy farm-life story · 12 crops · 4 seasons · 6 neighbors</div>
+<div class="tmenu"><button class="btn go hide" id="tCont">▶ Continue</button><input id="tName" maxlength="14" placeholder="Your farmer's name" aria-label="Farmer name"><button class="btn" id="tNew">🌾 New Farm</button><button class="btn" id="tHelp" style="background:#c8a06a;border-bottom-color:#8a6a3a">❓ How to play</button></div>
+<div class="credit">Made by Jaineil Rana (JaKing) · JaiGod</div></div>
+<div id="fade"></div>
+<script src="data.js"></script>
+<script src="game.js"></script>
+<script>
+/* ---------- panels ---------- */
+function openP(title,html){panelOn=true;$('pTitle').textContent=title;$('pBody').innerHTML=html;$('panel').classList.remove('hide');$('pBody').scrollTop=0}
+function closeP(){panelOn=false;$('panel').classList.add('hide');hold=false}
+const btn=(a,v,t,dis,cls)=>`<button class="btn ${cls||''}" data-a="${a}" data-v="${v}"${dis?' disabled':''}>${t}</button>`;
+const ic=id=>`<img class="ic" src="${icon(id)}" alt="">`,hearts5=p=>{const h=Math.min(10,p/100|0);return '<span class="hearts">'+'♥'.repeat(h)+'<s>'+'♥'.repeat(10-h)+'</s></span>'};
+function row(id,main,sub,right){return `<div class="row">${ic(id)}<div class="rt"><b>${main}</b><small>${sub||''}</small></div>${right||''}</div>`}
+function bag(){let h='<div class="grid">';S.inv.forEach((s,i)=>h+=`<button class="slot${i==S.sel?' on':''}" data-a="pick" data-v="${i}">${s?`<img src="${icon(s.id)}" alt="">${ITEMS[s.id]&&ITEMS[s.id].tool?'':`<b>${s.n}</b>`}`:''}</button>`);
+ h+='</div><div id="bagInfo" class="note">Tap an item for details. The first 10 slots are your hotbar.</div>';openP('🎒 Backpack · '+fmt(S.gold)+'g',h)}
+let pickI=-1;
+function pickInfo(i){pickI=i;const s=S.inv[i],el=$('bagInfo');if(!s){el.innerHTML='Empty slot.';return}const I=itemInfo(s.id);
+ el.innerHTML=row(s.id,I.n+(I.tool?' · '+TOOL_LV[S.tools[s.id]]:' ×'+s.n),(I.d||'')+(I.p?' Sells for '+I.p+'g.':'')+(I.e?' Restores '+I.e+' energy.':''))+'<div class="bar">'+(I.e?btn('eat',i,'🍴 Eat'):'')+(i>=10?btn('tohot',i,'⬆ To hotbar slot '+((S.sel+1)%10)):'')+(i<10&&!I.tool?btn('tobag',i,'⬇ Move to bag'):'')+'</div>'}
+function journal(tab){tab=tab||'q';let h='<div class="tabs">'+[['q','Quests'],['a','Awards'],['f','Friends'],['c','Collection']].map(t=>btn('jour',t[0],t[1],0,tab==t[0]?'on':'')).join('')+'</div>';
+ if(tab=='q'){const q=QUESTS[S.q];h+=q?`<div class="card"><small>STORY · ${S.q+1}/${QUESTS.length}</small><b>${q[0]}</b><p>${q[1]}</p><div class="prog"><i style="width:${Math.min(100,stat(q[2])/q[3]*100)}%"></i></div><small>${fmt(Math.min(stat(q[2]),q[3]))} / ${fmt(q[3])} · Reward ${q[4]}g</small></div>`:'<div class="card"><b>🏆 All story quests complete!</b><p>You are the Pride of the Hollow.</p></div>';
+  h+=reqCard()+'<p class="note">Tip: Water crops every day. Rain does it for you. Sleep in your house to end the day.</p>'}
+ if(tab=='a')h+='<div class="achs">'+ACH.map((a,i)=>`<div class="ach${S.ach[i]?' got':''}"><b>${S.ach[i]?'🏆':'🔒'} ${a[0]}</b><small>${a[1]}</small></div>`).join('')+`</div><p class="note">${Object.keys(S.ach).length}/${ACH.length} unlocked</p>`;
+ if(tab=='f')h+=NPCS.map(n=>`<div class="row"><img class="ic por" src="${portrait(n)}" alt=""><div class="rt"><b>${n.n}</b><small>${n.role} · Loves ${n.love.map(i=>itemInfo(i).n).join(', ')}</small>${hearts5(S.fr[n.id].p)}</div></div>`).join('');
+ if(tab=='c'){h+='<h3>Crops harvested</h3><div class="coll">'+Object.keys(CROPS).map(k=>`<span class="${S.st.kinds[k]?'':'dim'}" title="${CROPS[k].n}">${ic('c_'+k)}</span>`).join('')+'</div><h3>Fish caught</h3><div class="coll">'+Object.keys(FISH).map(k=>`<span class="${S.st.fishK[k]?'':'dim'}" title="${FISH[k].n}">${ic('f_'+k)}</span>`).join('')+'</div>';
+  h+=`<p class="note">Harvested ${S.st.harvested} · Shipped ${fmt(S.st.shipped)}g · Fish ${S.st.fish} · Artisan goods ${S.st.artisan}</p>`}
+ openP('📜 Journal',h)}
+function reqCard(){const r=S.req;if(!r)return'';const n=NPCS.find(x=>x.id==r.npc),I=itemInfo(r.item);return `<div class="card req"><small>BULLETIN · ${n.n}</small><b>${r.done?'✅ Done!':`Bring ${r.n} × ${I.n}`}</b><p>"${r.txt}"</p><small>Reward ${r.r}g + friendship · You have ${count(r.item)}</small>${r.done?'':'<div class="bar">'+btn('deliver',0,'📦 Deliver',count(r.item)<r.n)+'</div>'}</div>`}
+function shop(){const sea=S.season;let h='<h3>Seeds · '+SEASONS[sea]+'</h3>';for(const k in CROPS){const c=CROPS[k];if(c.s!=sea)continue;h+=row('s_'+k,c.n+' Seeds',`${c.d} days${c.r?' · regrows '+c.r+'d':''} · sells ${c.p}g`,buyB('s_'+k,c.sp))}
+ if(isFest())h+='<h3>Festival stall</h3>'+row('pie','Festival Pie','Restores 100 energy',buyB('pie',80));
+ h+='<h3>Ranch</h3>'+row('hay','Hay ×10',`Stored in silo: ${S.hay}. Fed when animals stay inside.`,btn('buy','hay|10',`100g`,S.gold<100));
+ for(const k in ANIM){const A=ANIM[k],b=S[A.b],cap=b?b*4:0,have=S.animals.filter(a=>ANIM[a.t].b==A.b).length;h+=`<div class="row"><span class="ic big">${{chicken:'🐔',cow:'🐄',sheep:'🐑'}[k]}</span><div class="rt"><b>${A.n}</b><small>${b?`${have}/${cap} in ${A.b}`:'Needs a '+A.b+' (Rowan builds)'} · gives ${itemInfo(A.prod).n}</small></div>${btn('buyA',k,A.p+'g',!b||have>=cap||S.gold<A.p)}</div>`}
+ h+='<h3>Machines</h3>'+row('m_jar','Preserves Jar',ITEMS.m_jar.d,buyB('m_jar',450))+row('m_press','Cheese Press',ITEMS.m_press.d,buyB('m_press',700))+row('m_loom','Loom',ITEMS.m_loom.d,buyB('m_loom',1000));
+ openP("🛒 June's General Store · "+fmt(S.gold)+'g',h)}
+const buyB=(id,p)=>'<div class="bb">'+btn('buy',id+'|1',p+'g',S.gold<p)+(itemInfo(id).seed?btn('buy',id+'|5','×5',S.gold<p*5):'')+'</div>';
+function forge(){let h='<h3>Tool upgrades</h3>';for(const t of['hoe','can','rod']){const l=S.tools[t];h+=row(t,ITEMS[t].n+' · '+TOOL_LV[l],l<3?`→ ${TOOL_LV[l+1]}: ${t=='rod'?'bigger catch bar':t=='can'?'wider area, '+[35,55,80][l]+' water':'wider area'}`:'Fully upgraded!',l<3?btn('upg',t,TOOL_COST[l]+'g',S.gold<TOOL_COST[l]):'')}
+ h+='<h3>Construction</h3>';for(const k of['coop','barn']){const l=S[k],c=BUILD[k][l];h+=`<div class="row"><span class="ic big">${k=='coop'?'🐔':'🐄'}</span><div class="rt"><b>${l?'Big ':''}${k=='coop'?'Coop':'Barn'}</b><small>${l>1?'Max size (8 animals)':l?'Upgrade to hold 8 animals':'Holds 4 '+(k=='coop'?'chickens':'cows & sheep')}</small></div>${l<2?btn('build',k,c+'g',S.gold<c):''}</div>`}
+ const f=S.field;h+=`<div class="row"><span class="ic big">🌱</span><div class="rt"><b>Field expansion</b><small>${f<2?'Clear more land for crops':'Fully expanded!'}</small></div>${f<2?btn('build','field',BUILD.field[f]+'g',S.gold<BUILD.field[f]):''}</div>`;openP("⚒️ Rowan's Forge · "+fmt(S.gold)+'g',h)}
+function binP(){let tot=S.bin.reduce((a,b)=>a+itemInfo(b.id).p*b.n,0),h=`<p class="note">Items in the bin are sold overnight. Tonight: <b>${fmt(tot)}g</b></p>`;let any=0;
+ S.inv.forEach((s,i)=>{if(!s)return;const I=itemInfo(s.id);if(I.tool||I.place||!I.p)return;any=1;h+=row(s.id,I.n+' ×'+s.n,I.p+'g each','<div class="bb">'+btn('ship',i+'|1','Ship 1')+btn('ship',i+'|all','All')+'</div>')});
+ if(!any)h+='<p class="note">Nothing to ship yet. Harvest crops, fish or collect animal products!</p>';openP('📦 Shipping Bin',h)}
+function animP(b){const L=S.animals.filter(a=>ANIM[a.t].b==b);let h=`<p class="note">Silo hay: <b>${S.hay}</b> · ${L.length}/${S[b]*4} animals. Animals graze outside on fair days (spring–fall); otherwise they eat hay.</p>`;
+ if(!L.length)h+='<p class="note">No animals yet. Buy some at June\'s store!</p>';L.forEach(a=>{const i=S.animals.indexOf(a);h+=`<div class="row"><span class="ic big">${{chicken:'🐔',cow:'🐄',sheep:'🐑'}[a.t]}</span><div class="rt"><b>${a.n}</b><small>${ANIM[a.t].n} · ${a.rdy?itemInfo(ANIM[a.t].prod).n+' ready!':'No product yet'}</small>${hearts5(a.love)}</div><div class="bb">${btn('pet',i,a.pt==dn()?'♥':'Pet',a.pt==dn())}${btn('col',i,'Collect',!a.rdy)}</div></div>`});
+ openP(b=='coop'?'🐔 Coop':'🐄 Barn',h)}
+function talkP(n){const f=S.fr[n.d.id],first=f.t!=dn();if(first){f.t=dn();f.p+=isFest()?40:20;sfx('talk')}const tier=hearts(n.d.id)<3?0:hearts(n.d.id)<6?1:2,L=n.d.l[tier];
+ let line=isFest()?`Isn't the ${FESTS[S.season]} lovely? ${n.d.id=='bram'?'Bring me your finest item for the contest!':''}`:L[(dn()+NPCS.indexOf(n.d))%L.length];if(!first&&!isFest())line=['Good to see you again!','Busy day, huh?','Take care out there.'][dn()%3];
+ let h=`<div class="talk"><img class="por big" src="${portrait(n.d)}" alt=""><div><b>${n.d.n}</b><small>${n.d.role}</small>${hearts5(f.p)}<p class="say" id="say">"${line}"</p></div></div>`;
+ if(isFest()&&n.d.id=='bram'&&S.festDone!=S.year+'-'+S.season){h+='<h3>🏅 '+FESTS[S.season]+' contest · pick your entry</h3><div class="gifts">'+giftList('enter')+'</div>'}
+ h+=f.g==dn()?'<p class="note">You already gave a gift today.</p>':'<h3>🎁 Give a gift (once a day)</h3><div class="gifts">'+giftList('gift')+'</div>';curT=n;openP('💬 '+n.d.n,h);chk()}
+function giftList(a){let h='';S.inv.forEach((s,i)=>{if(!s)return;const I=itemInfo(s.id);if(I.tool||I.place)return;h+=`<button class="slot" data-a="${a}" data-v="${i}" title="${I.n}"><img src="${icon(s.id)}" alt=""><b>${s.n}</b></button>`});return h||'<p class="note">Nothing to give.</p>'}
+function sleepP(){openP('🏠 Farmhouse',`<p class="note">It's ${$('hTime').textContent}. Sleep until morning? Your game is saved when you sleep.</p><p class="note">Tomorrow: <b>${WXI[S.wxN]} ${WXN[S.wxN]}</b>${S.day+1==FEST_DAY?' · 🎉 '+FESTS[S.season]+' in the village!':''}</p><div class="bar">${btn('sleep',0,'😴 Sleep','',' go')}${btn('close',0,'Not yet')}</div>`)}
+function boardP(){openP('📌 Bulletin Board',reqCard()||'<p class="note">No requests today.</p>')}
+function pauseP(){openP('⏸ Paused',`<div class="col">${btn('close',0,'▶ Resume','',' go')}${btn('saveG',0,'💾 Save game')}${btn('snd',0,(sfxOn?'🔊 Sound: on':'🔇 Sound: off'))}${btn('mus',0,(musOn?'🎵 Music: on':'🎵 Music: off'))}${btn('help',0,'❓ How to play')}${btn('quit',0,'🏠 Save & quit to title')}</div>`)}
+function helpP(){openP('❓ How to play',`<div class="help"><p><b>Goal:</b> grow a thriving farm, befriend the village and finish every story quest.</p>
+<p><b>Move</b> WASD / arrows (or the joystick). <b>Action</b> Space / J / click a nearby tile (or ✋). <b>Bag</b> E · <b>Journal</b> Q · <b>Hotbar</b> 1–0 / mouse wheel · <b>Pause</b> Esc · <b>Mute</b> M.</p>
+<p>🌱 Pick the <b>Hoe</b> and till grass inside your field. Select seeds and plant them on tilled soil. Use the <b>Watering Can</b> every day (refill at water). Crops grow overnight when watered. Rain waters for you!</p>
+<p>🌙 Sleep in your house before 2 AM or you'll pass out and drop some gold. Energy refills when you sleep; eat crops from the bag to recover.</p>
+<p>📦 Put goods in the <b>shipping bin</b>; you're paid next morning. Buy seeds, animals and machines at <b>June's store</b>. <b>Rowan's forge</b> upgrades tools (Copper → Silver → Gold) and builds coops, barns and bigger fields.</p>
+<p>🐔 Pet animals daily and collect eggs, milk and wool. Turn them into cheese and cloth with machines. The Preserves Jar turns crops into jam.</p>
+<p>🎣 Face water with the rod and press Action. When <b>!</b> appears press again, then <b>hold</b> to keep the fish inside the green bar.</p>
+<p>💬 Talk to villagers daily and give gifts to earn hearts. The 📌 bulletin board posts a new request every day. Each season has a festival on day ${FEST_DAY}. Crops wither when the season changes, so plan ahead!</p></div>`)}
+/* ---------- actions (panel buttons) ---------- */
+const A={sel:v=>{S.sel=+v;sfx('sel');hotbar()},close:closeP,pick:v=>pickInfo(+v),jour:v=>journal(v),help:helpP,
+ eat:v=>{const s=S.inv[v],I=itemInfo(s.id);S.energy=Math.min(100,S.energy+I.e);take(s.id);sfx('pop');flt(P.x,P.y-24,'+'+I.e+'⚡','#9f6');hud();bag()},
+ tohot:v=>{const t=S.inv[S.sel];S.inv[S.sel]=S.inv[v];S.inv[v]=t;hotbar();bag()},tobag:v=>{const j=S.inv.indexOf(null,10);if(j<0)return toast('Bag is full');S.inv[j]=S.inv[v];S.inv[v]=null;hotbar();bag()},
+ buy:v=>{let[id,n]=v.split('|');n=+n;const p=(id=='hay'?10:id=='pie'?80:id[0]=='s'?CROPS[id.slice(2)].sp:{m_jar:450,m_press:700,m_loom:1000}[id])*n;if(S.gold<p)return sfx('err');
+  if(id=='hay')S.hay+=n;else if(!add(id,n))return;S.gold-=p;sfx('coin');flt(P.x,P.y-24,'-'+p+'g','#ffd23a');hud();shop()},
+ buyA:k=>{const A_=ANIM[k];if(S.gold<A_.p)return;S.gold-=A_.p;const b=BLD.find(x=>x.k==A_.b);S.animals.push({t:k,n:NAMES[(Math.random()*NAMES.length)|0],x:(b.x+b.w/2)*16,y:(b.y+b.h+1)*16,love:0,rdy:0,pt:0,d:0,out:0});
+  sfx(k=='chicken'?'cluck':'moo');toast(`🎉 ${A_.n} joined your farm!`);hud();chk();shop()},
+ upg:t=>{const l=S.tools[t],c=TOOL_COST[l];if(S.gold<c)return;S.gold-=c;S.tools[t]++;S.st.upgrades++;sfx('ach');toast(`⚒️ ${ITEMS[t].n} upgraded to ${TOOL_LV[l+1]}!`);if(t=='can')S.water=canCap();hotbar();hud();chk();forge()},
+ build:k=>{const l=S[k],c=BUILD[k][l];if(S.gold<c)return;S.gold-=c;S[k]++;sfx('ach');shake=.6;toast(k=='field'?'🌱 Your field grew bigger!':`🔨 Rowan finished your ${k}!`);gKey='';hud();chk();forge()},
+ ship:v=>{let[i,n]=v.split('|');const s=S.inv[i];if(!s)return;n=n=='all'?s.n:1;const id=s.id;take(id,n);const b=S.bin.find(x=>x.id==id);b?b.n+=n:S.bin.push({id,n});sfx('coin');spark(10*16+8,6*16,['#ffd23a','#fff'],8,80);flt(10*16+8,6*16,'+'+itemInfo(id).p*n+'g','#ffd23a');binP()},
+ pet:i=>{const a=S.animals[i];if(a.pt==dn())return;a.pt=dn();a.love=Math.min(1000,a.love+15);sfx(a.t=='chicken'?'cluck':'moo');panelOn&&animP(ANIM[a.t].b)},
+ col:i=>{const a=S.animals[i];if(!a.rdy)return;const pr=ANIM[a.t].prod,n=a.love>=600&&Math.random()<.3?2:1;if(add(pr,n)){a.rdy=0;a.love=Math.min(1000,a.love+5);sfx('pop');flt(a.out?a.x:P.x,(a.out?a.y:P.y)-20,'+'+n+' '+itemInfo(pr).n,'#fff');panelOn&&animP(ANIM[a.t].b)}},
+ gift:i=>{const s=S.inv[i],n=curT.d,f=S.fr[n.id];if(!s||f.g==dn())return;const id=s.id;take(id);f.g=dn();let d,txt;
+  if(n.love.includes(id)){d=80;txt='Oh! I love this! You know me so well.'}else if(n.like.includes(id)){d=45;txt='How thoughtful, thank you!'}else if(n.hate.includes(id)){d=-30;txt='Um... I really don\'t like this.'}else{d=20;txt='Thanks, that\'s nice of you.'}
+  if(isFest())d*=2;f.p=Math.max(0,f.p+d);sfx(d>0?'pop':'err');if(d>0)spark(curT.x,curT.y-24,['#ff6a8a','#fff'],10,70);talkP(curT);$('say').textContent='"'+txt+'"';chk()},
+ enter:i=>{const s=S.inv[i];if(!s)return;const I=itemInfo(s.id),rival=120+S.season*50+S.year*60+(Math.random()*120|0);take(s.id);S.festDone=S.year+'-'+S.season;
+  if(I.p>=rival){S.gold+=800;S.st.champ++;sfx('ach');spark(P.x,P.y-20,['#ffd23a','#fff','#e8445a'],30,120);openP('🏅 You won!',`<p class="note">The judges loved your ${I.n} (value ${I.p}) over the best rival entry (${rival}). First prize: <b>800g</b>!</p>${btn('close',0,'Hooray!','',' go')}`)}
+  else{S.gold+=200;sfx('pop');openP('🥈 Second place',`<p class="note">Your ${I.n} (value ${I.p}) was lovely, but a rival entry scored ${rival}. Second prize: <b>200g</b>. Try a pricier item next time!</p>${btn('close',0,'Okay','',' go')}`)}hud();chk()},
+ deliver:()=>{const r=S.req;if(!r||r.done||!take(r.item,r.n))return;r.done=1;S.gold+=r.r;S.fr[r.npc].p+=60;S.st.board++;sfx('ach');toast(`📌 Request complete! +${r.r}g`);hud();chk();panelOn&&boardP()},
+ sleep:()=>{closeP();sleep(0)},saveG:()=>{toast(save()?'💾 Game saved':'⚠️ Could not save (storage blocked)')},snd:()=>{sfxOn=!sfxOn;$('bSnd').textContent=sfxOn?'🔊':'🔇';pauseP()},mus:()=>{musOn=!musOn;pauseP()},
+ quit:()=>{save();closeP();toTitle()},sum:closeP};
+</script>
+</body></html>
